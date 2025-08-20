@@ -1,0 +1,394 @@
+=============================================================================
+INSTRUÇÕES COMPLETAS PARA SETUP DA PLATAFORMA DE AGENDAMENTO
+=============================================================================
+
+Este arquivo contém todas as instruções necessárias para configurar e executar
+o projeto da plataforma de agendamento SaaS com zero custo fixo.
+
+=============================================================================
+1. PRÉ-REQUISITOS
+=============================================================================
+
+✅ Node.js 18+ instalado
+✅ pnpm instalado (npm install -g pnpm)
+✅ Git instalado
+✅ Conta no GitHub
+✅ Conta no Supabase (gratuita)
+✅ Conta no Vercel (gratuita)
+✅ Conta no Cloudflare (gratuita)
+✅ Conta no Upstash (gratuita)
+✅ Conta no Resend (gratuita)
+
+=============================================================================
+2. CONFIGURAÇÃO INICIAL
+=============================================================================
+
+1. Clone o repositório:
+   git clone <URL_DO_SEU_REPO>
+   cd plataforma-agenda
+
+2. Instale as dependências:
+   pnpm install
+
+3. Copie o arquivo de variáveis de ambiente:
+   cp env.example .env.local
+
+=============================================================================
+3. CONFIGURAÇÃO DO SUPABASE
+=============================================================================
+
+1. Acesse https://supabase.com e crie uma conta gratuita
+
+2. Crie um novo projeto:
+   - Nome: "plataforma-agenda"
+   - Database Password: (anote esta senha)
+   - Region: São Paulo (se disponível)
+
+3. Após criar o projeto, vá em Settings > API e copie:
+   - Project URL
+   - anon public key
+   - service_role key
+
+4. Execute as migrações SQL no Supabase:
+   - Vá em SQL Editor
+   - Execute o conteúdo do arquivo database/migrations/001_initial_schema.sql
+   - Execute o conteúdo do arquivo database/migrations/002_rls_policies.sql
+   - Execute o conteúdo do arquivo database/seeds/001_demo_data.sql
+
+5. Configure as variáveis de ambiente no .env.local:
+   DATABASE_URL=postgresql://postgres:[SUA_SENHA]@db.[PROJECT_REF].supabase.co:5432/postgres
+   SUPABASE_URL=https://[PROJECT_REF].supabase.co
+   SUPABASE_ANON_KEY=[ANON_KEY]
+   SUPABASE_SERVICE_ROLE_KEY=[SERVICE_ROLE_KEY]
+
+=============================================================================
+4. CONFIGURAÇÃO DO UPSTASH REDIS
+=============================================================================
+
+1. Acesse https://upstash.com e crie uma conta gratuita
+
+2. Crie um novo database:
+   - Name: "plataforma-agenda-cache"
+   - Region: São Paulo (se disponível)
+   - TLS: Enabled
+
+3. Após criar, copie:
+   - UPSTASH_REDIS_REST_URL
+   - UPSTASH_REDIS_REST_TOKEN
+
+4. Configure no .env.local:
+   UPSTASH_REDIS_REST_URL=[URL_DO_REDIS]
+   UPSTASH_REDIS_REST_TOKEN=[TOKEN_DO_REDIS]
+
+=============================================================================
+5. CONFIGURAÇÃO DO RESEND (E-MAIL)
+=============================================================================
+
+1. Acesse https://resend.com e crie uma conta gratuita
+
+2. Verifique seu domínio ou use o domínio de teste
+
+3. Copie a API Key
+
+4. Configure no .env.local:
+   RESEND_API_KEY=[SUA_API_KEY]
+   RESEND_FROM_EMAIL=noreply@seudominio.com
+
+=============================================================================
+6. CONFIGURAÇÃO DO CLOUDFLARE WORKERS
+=============================================================================
+
+1. Acesse https://cloudflare.com e crie uma conta gratuita
+
+2. Instale o Wrangler CLI:
+   npm install -g wrangler
+
+3. Faça login no Wrangler:
+   wrangler login
+
+4. Configure o wrangler.toml em apps/worker/:
+   [env.production]
+   name = "plataforma-agenda-api"
+   account_id = "[SEU_ACCOUNT_ID]"
+   workers_dev = true
+   compatibility_date = "2024-01-01"
+
+   [env.production.vars]
+   SUPABASE_URL = "[SUA_SUPABASE_URL]"
+   SUPABASE_ANON_KEY = "[SUA_SUPABASE_ANON_KEY]"
+   SUPABASE_SERVICE_ROLE_KEY = "[SUA_SUPABASE_SERVICE_ROLE_KEY]"
+   UPSTASH_REDIS_REST_URL = "[SUA_REDIS_URL]"
+   UPSTASH_REDIS_REST_TOKEN = "[SUA_REDIS_TOKEN]"
+   RESEND_API_KEY = "[SUA_RESEND_API_KEY]"
+   JWT_SECRET = "[SEU_JWT_SECRET]"
+
+5. Configure as variáveis de ambiente no .env.local:
+   CLOUDFLARE_ACCOUNT_ID=[SEU_ACCOUNT_ID]
+   CLOUDFLARE_API_TOKEN=[SEU_API_TOKEN]
+
+=============================================================================
+7. CONFIGURAÇÃO DO VERCEL
+=============================================================================
+
+1. Acesse https://vercel.com e crie uma conta gratuita
+
+2. Conecte seu repositório GitHub ao Vercel
+
+3. Configure as variáveis de ambiente no Vercel:
+   - SUPABASE_URL
+   - SUPABASE_ANON_KEY
+   - UPSTASH_REDIS_REST_URL
+   - UPSTASH_REDIS_REST_TOKEN
+   - RESEND_API_KEY
+   - JWT_SECRET
+   - NEXTAUTH_URL (URL do seu domínio)
+   - NEXTAUTH_SECRET (chave secreta para NextAuth)
+
+4. Configure o build command:
+   pnpm build:web
+
+5. Configure o output directory:
+   apps/web/.next
+
+=============================================================================
+8. CONFIGURAÇÃO DAS VARIÁVEIS DE AMBIENTE COMPLETAS
+=============================================================================
+
+Copie este conteúdo para o arquivo .env.local:
+
+# Supabase
+DATABASE_URL=postgresql://postgres:[SUA_SENHA]@db.[PROJECT_REF].supabase.co:5432/postgres
+SUPABASE_URL=https://[PROJECT_REF].supabase.co
+SUPABASE_ANON_KEY=[ANON_KEY]
+SUPABASE_SERVICE_ROLE_KEY=[SERVICE_ROLE_KEY]
+
+# Redis (Upstash)
+UPSTASH_REDIS_REST_URL=https://[REDIS_URL].upstash.io
+UPSTASH_REDIS_REST_TOKEN=[REDIS_TOKEN]
+
+# E-mail (Resend)
+RESEND_API_KEY=[RESEND_API_KEY]
+RESEND_FROM_EMAIL=noreply@seudominio.com
+
+# JWT e Auth
+JWT_SECRET=[GERAR_CHAVE_SECRETA_32_CARACTERES]
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=[GERAR_CHAVE_SECRETA_32_CARACTERES]
+
+# App
+APP_BASE_URL=http://localhost:3000
+API_BASE_URL=http://localhost:8787
+TIMEZONE=America/Sao_Paulo
+DEFAULT_LOCALE=pt-BR
+NODE_ENV=development
+
+# Cloudflare
+CLOUDFLARE_ACCOUNT_ID=[SEU_ACCOUNT_ID]
+CLOUDFLARE_API_TOKEN=[SEU_API_TOKEN]
+
+# Feature Flags
+ENABLE_PAYMENTS=false
+ENABLE_ANALYTICS=false
+ENABLE_NOTIFICATIONS=true
+
+# Limites
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW_MS=900000
+CACHE_TTL_SECONDS=120
+MAX_FILE_SIZE_MB=5
+
+# Logs
+LOG_LEVEL=info
+
+=============================================================================
+9. EXECUTANDO O PROJETO LOCALMENTE
+=============================================================================
+
+1. Build do pacote core:
+   pnpm build:core
+
+2. Em um terminal, execute o frontend:
+   pnpm dev:web
+
+3. Em outro terminal, execute a API:
+   pnpm dev:worker
+
+4. Acesse:
+   - Frontend: http://localhost:3000
+   - API: http://localhost:8787
+
+=============================================================================
+10. DEPLOY EM PRODUÇÃO
+=============================================================================
+
+1. Deploy da API (Cloudflare Workers):
+   cd apps/worker
+   wrangler deploy --env production
+
+2. Deploy do Frontend (Vercel):
+   - Conecte o repositório ao Vercel
+   - Configure as variáveis de ambiente
+   - Deploy automático será feito
+
+3. Configure os domínios:
+   - Frontend: https://seudominio.vercel.app
+   - API: https://plataforma-agenda-api.[SEU_SUBDOMINIO].workers.dev
+
+4. Atualize as variáveis de ambiente:
+   APP_BASE_URL=https://seudominio.vercel.app
+   API_BASE_URL=https://plataforma-agenda-api.[SEU_SUBDOMINIO].workers.dev
+   NEXTAUTH_URL=https://seudominio.vercel.app
+
+=============================================================================
+11. CONFIGURAÇÃO DO CRON (LEMBRETES)
+=============================================================================
+
+1. No Cloudflare Workers, configure o cron trigger:
+   - Vá em Workers & Pages > seu worker > Triggers
+   - Adicione um Cron Trigger:
+     - Cron expression: "0 */1 * * *" (a cada hora)
+     - Route: /cron/reminders
+
+2. Ou use o Wrangler:
+   wrangler deploy --env production --schedule "0 */1 * * *"
+
+=============================================================================
+12. TESTANDO O SISTEMA
+=============================================================================
+
+1. Teste de autenticação:
+   - Acesse http://localhost:3000
+   - Crie uma conta
+   - Faça login
+
+2. Teste de agendamento:
+   - Crie uma unidade
+   - Adicione profissionais
+   - Crie serviços
+   - Configure horários
+   - Teste o booking público
+
+3. Teste de notificações:
+   - Crie um agendamento
+   - Verifique se o e-mail foi enviado
+
+4. Teste de relatórios:
+   - Acesse a seção de relatórios
+   - Gere relatórios por período
+
+=============================================================================
+13. COMANDOS ÚTEIS
+=============================================================================
+
+# Desenvolvimento
+pnpm dev              # Todos os serviços
+pnpm dev:web          # Apenas frontend
+pnpm dev:worker       # Apenas API
+
+# Build
+pnpm build            # Build completo
+pnpm build:web        # Build frontend
+pnpm build:worker     # Build API
+pnpm build:core       # Build pacote core
+
+# Testes
+pnpm test             # Todos os testes
+pnpm test:unit        # Testes unitários
+pnpm test:e2e         # Testes E2E
+
+# Lint e Type Check
+pnpm lint             # ESLint
+pnpm type-check       # TypeScript
+
+# Banco de dados
+pnpm db:migrate       # Executar migrações
+pnpm db:seed          # Executar seeds
+pnpm db:reset         # Reset do banco
+
+# Deploy
+wrangler deploy       # Deploy da API
+vercel --prod         # Deploy do frontend
+
+=============================================================================
+14. ESTRUTURA DE ARQUIVOS IMPORTANTES
+=============================================================================
+
+📁 apps/
+  📁 web/                 # Next.js App (Frontend)
+  📁 worker/              # Cloudflare Workers (API)
+
+📁 packages/
+  📁 core/                # SDK compartilhado
+  📁 ui/                  # Componentes UI
+
+📁 database/
+  📁 migrations/          # Migrações SQL
+  📁 seeds/               # Dados iniciais
+
+📁 docs/                  # Documentação
+
+=============================================================================
+15. TROUBLESHOOTING
+=============================================================================
+
+❌ Erro de conexão com Supabase:
+   - Verifique as variáveis de ambiente
+   - Confirme se o projeto está ativo
+   - Verifique se as migrações foram executadas
+
+❌ Erro de cache Redis:
+   - Verifique as credenciais do Upstash
+   - Confirme se o database está ativo
+
+❌ Erro de e-mail:
+   - Verifique a API key do Resend
+   - Confirme se o domínio está verificado
+
+❌ Erro de build:
+   - Execute pnpm install
+   - Limpe o cache: pnpm clean
+   - Verifique se o Node.js é 18+
+
+❌ Erro de deploy:
+   - Verifique as variáveis de ambiente
+   - Confirme se as contas estão ativas
+   - Verifique os logs de erro
+
+=============================================================================
+16. PRÓXIMOS PASSOS
+=============================================================================
+
+✅ Sistema básico funcionando
+🔄 Implementar pagamentos (Mercado Pago/Stripe)
+🔄 Adicionar mais relatórios
+🔄 Implementar notificações push
+🔄 Adicionar integração com WhatsApp
+🔄 Implementar sistema de fidelidade
+🔄 Adicionar dashboard avançado
+🔄 Implementar backup automático
+🔄 Adicionar testes automatizados
+
+=============================================================================
+17. SUPORTE
+=============================================================================
+
+Para dúvidas ou problemas:
+1. Verifique os logs de erro
+2. Consulte a documentação do Supabase
+3. Abra uma issue no repositório
+4. Entre em contato com o suporte
+
+=============================================================================
+18. LICENÇA
+=============================================================================
+
+Este projeto é open source e pode ser usado livremente.
+Mantenha os créditos originais se redistribuir.
+
+=============================================================================
+
+🎉 PARABÉNS! Seu SaaS de agendamento está pronto para uso!
+
+Data de criação: $(date)
+Versão: 1.0.0
+Desenvolvido com ❤️ para o mercado brasileiro
