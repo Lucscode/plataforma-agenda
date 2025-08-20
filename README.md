@@ -173,5 +173,3 @@ pnpm type-check       # TypeScript
 Para dúvidas ou problemas, abra uma issue no repositório.
 
 ---
-
-**Desenvolvido com ❤️ para o mercado brasileiro**
